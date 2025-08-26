@@ -1,0 +1,11 @@
+flask
+pandas
+Cython
+ta-lib
+python-dotenv
+fyers-apiv3
+numpy
+matplotlib
+seaborn  # For enhanced plotting (optional)
+scikit-learn  # Preparing for Phase 2 ML integration
+jupyter  # For analysis notebooks

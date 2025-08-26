@@ -1,0 +1,32 @@
+{
+  "default": {
+    "rsi": 0.15,
+    "macd": 0.2,
+    "bb": 0.15,
+    "ema": 0.2,
+    "sar": 0.15,
+    "supertrend": 0.15,
+    "buy_threshold": 0.3,
+    "sell_threshold": -0.3
+  },
+  "NSE_RELIANCE_EQ": {
+    "rsi": 0.15,
+    "macd": 0.2,
+    "bb": 0.15,
+    "ema": 0.2,
+    "sar": 0.15,
+    "supertrend": 0.15,
+    "buy_threshold": 0.3,
+    "sell_threshold": -0.3
+  },
+  "NSE_TCS_EQ": {
+    "rsi": 0.15,
+    "macd": 0.2,
+    "bb": 0.15,
+    "ema": 0.2,
+    "sar": 0.15,
+    "supertrend": 0.15,
+    "buy_threshold": 0.3,
+    "sell_threshold": -0.3
+  }
+}

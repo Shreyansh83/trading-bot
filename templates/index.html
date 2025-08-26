@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+  <title>Trading Bot Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-4">Enhanced Trading Bot Dashboard</h1>
+    <p class="lead">Advanced technical analysis with weighted indicators</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-warning" role="alert">
+          <ul class="mb-0">
+            {% for msg in messages %}
+              <li>{{ msg }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h3>Analysis Configuration</h3>
+          </div>
+          <div class="card-body">
+            <form id="mainForm" method="post" action="/">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Symbol</label>
+                    <input name="symbol" class="form-control" value="{{ default_symbol }}" 
+                           placeholder="e.g., NSE:RELIANCE-EQ">
+                    <small class="form-text text-muted">Enter the symbol you want to analyze</small>
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Resolution</label>
+                    <select name="resolution" class="form-select">
+                      {% for code, label in resolutions %}
+                        <option value="{{ code }}" {% if code == default_resolution %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Analysis Type</label>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="data_type" value="historic" id="historicOpt" checked>
+                  <label class="form-check-label" for="historicOpt">Historic Analysis</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="data_type" value="live" id="liveOpt">
+                  <label class="form-check-label" for="liveOpt">Live Monitoring</label>
+                </div>
+              </div>
+
+              <div id="historic-options" class="mb-3">
+                <label class="form-label">Select Date</label>
+                <input type="date" name="historic_date" class="form-control" max="{{ today }}">
+                <small class="form-text text-muted">Select a market trading day</small>
+              </div>
+
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="show_chart" id="showChart" checked>
+                <label class="form-check-label" for="showChart">
+                  Include Advanced Charts
+                </label>
+              </div>
+
+              <button class="btn btn-primary btn-lg">
+                <i class="bi bi-play-fill"></i> Start Analysis
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card mb-3">
+          <div class="card-header">
+            <h4>Enhanced Features</h4>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                6 Technical Indicators
+              </li>
+              <li class="mb-2">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                Weighted Signal Generation
+              </li>
+              <li class="mb-2">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                Real-time Analysis
+              </li>
+              <li class="mb-2">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                Customizable Weights
+              </li>
+              <li class="mb-2">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                Advanced Charting
+              </li>
+            </ul>
+            
+            <a href="/weights" class="btn btn-outline-secondary w-100">
+              <i class="bi bi-sliders"></i> Manage Indicator Weights
+            </a>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h4>Available Indicators</h4>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6">
+                <h6>Basic</h6>
+                <ul class="list-unstyled small">
+                  <li>• RSI</li>
+                  <li>• MACD</li>
+                  <li>• Bollinger Bands</li>
+                </ul>
+              </div>
+              <div class="col-6">
+                <h6>Advanced</h6>
+                <ul class="list-unstyled small">
+                  <li>• EMA Crossover</li>
+                  <li>• Parabolic SAR</li>
+                  <li>• SuperTrend</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get today's date for the date picker max attribute
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="historic_date"]').max = today;
+    
+    // Form behavior
+    const form = document.getElementById('mainForm');
+    const histOpt = document.getElementById('historicOpt');
+    const liveOpt = document.getElementById('liveOpt');
+    const historicOptions = document.getElementById('historic-options');
+
+    histOpt.addEventListener('change', () => {
+      form.action = '/';
+      form.method = 'post';
+      historicOptions.style.display = 'block';
+    });
+
+    liveOpt.addEventListener('change', () => {
+      form.action = '/live';
+      form.method = 'get';
+      historicOptions.style.display = 'none';
+    });
+
+    // Initialize
+    historicOptions.style.display = 'block';
+    
+    // Add form validation
+    form.addEventListener('submit', function(e) {
+      const symbol = document.querySelector('input[name="symbol"]').value;
+      const historicDate = document.querySelector('input[name="historic_date"]').value;
+      
+      if (!symbol.trim()) {
+        alert('Please enter a symbol');
+        e.preventDefault();
+        return;
+      }
+      
+      if (histOpt.checked && !historicDate) {
+        alert('Please select a date for historic analysis');
+        e.preventDefault();
+        return;
+      }
+    });
+  </script>
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+  <title>Weight Management - Trading Bot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <h1>Indicator Weight Management</h1>
+  
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="alert alert-success" role="alert">
+        <ul class="mb-0">
+          {% for msg in messages %}
+            <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="post">
+    <div class="mb-3">
+      <label class="form-label">Symbol</label>
+      <select name="symbol" class="form-select" onchange="this.form.submit()">
+        <option value="default" {% if symbol == 'default' %}selected{% endif %}>Default</option>
+        {% for sym in available_symbols %}
+          <option value="{{ sym }}" {% if symbol == sym %}selected{% endif %}>{{ sym }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <h3>Indicator Weights</h3>
+        <p class="text-muted">Weights are normalized to sum to 1.0</p>
+        
+        <div class="mb-3">
+          <label class="form-label">RSI Weight</label>
+          <input type="number" name="weight_rsi" class="form-control" 
+                 step="0.01" min="0" max="1" value="{{ weights.rsi }}">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">MACD Weight</label>
+          <input type="number" name="weight_macd" class="form-control" 
+                 step="0.01" min="0" max="1" value="{{ weights.macd }}">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Bollinger Bands Weight</label>
+          <input type="number" name="weight_bb" class="form-control" 
+                 step="0.01" min="0" max="1" value="{{ weights.bb }}">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">EMA Weight</label>
+          <input type="number" name="weight_ema" class="form-control" 
+                 step="0.01" min="0" max="1" value="{{ weights.ema }}">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Parabolic SAR Weight</label>
+          <input type="number" name="weight_sar" class="form-control" 
+                 step="0.01" min="0" max="1" value="{{ weights.sar }}">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">SuperTrend Weight</label>
+          <input type="number" name="weight_supertrend" class="form-control" 
+                 step="0.01" min="0" max="1" value="{{ weights.supertrend }}">
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <h3>Signal Thresholds</h3>
+        <p class="text-muted">Thresholds for generating BUY/SELL signals</p>
+        
+        <div class="mb-3">
+          <label class="form-label">Buy Threshold</label>
+          <input type="number" name="buy_threshold" class="form-control" 
+                 step="0.01" min="-1" max="1" value="{{ weights.buy_threshold }}">
+          <small class="form-text text-muted">Composite score threshold for BUY signal</small>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Sell Threshold</label>
+          <input type="number" name="sell_threshold" class="form-control" 
+                 step="0.01" min="-1" max="1" value="{{ weights.sell_threshold }}">
+          <small class="form-text text-muted">Composite score threshold for SELL signal</small>
+        </div>
+        
+        <h3 class="mt-4">Current Weight Summary</h3>
+        <table class="table table-sm">
+          <tbody>
+            <tr><td>RSI:</td><td>{{ "%.3f"|format(weights.rsi) }}</td></tr>
+            <tr><td>MACD:</td><td>{{ "%.3f"|format(weights.macd) }}</td></tr>
+            <tr><td>Bollinger Bands:</td><td>{{ "%.3f"|format(weights.bb) }}</td></tr>
+            <tr><td>EMA:</td><td>{{ "%.3f"|format(weights.ema) }}</td></tr>
+            <tr><td>Parabolic SAR:</td><td>{{ "%.3f"|format(weights.sar) }}</td></tr>
+            <tr><td>SuperTrend:</td><td>{{ "%.3f"|format(weights.supertrend) }}</td></tr>
+            <tr class="table-secondary">
+              <td><strong>Total:</strong></td>
+              <td><strong>{{ "%.3f"|format(weights.rsi + weights.macd + weights.bb + weights.ema + weights.sar + weights.supertrend) }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Update Weights</button>
+    <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+  </form>
+
+  <script>
+    // Add some client-side validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const weightInputs = document.querySelectorAll('input[name^="weight_"]');
+      let total = 0;
+      
+      weightInputs.forEach(input => {
+        total += parseFloat(input.value) || 0;
+      });
+      
+      if (total === 0) {
+        alert('At least one weight must be greater than 0');
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>
