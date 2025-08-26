@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+  <title>Strategy Backtest</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-4">Strategy Backtest</h1>
+    <form method="post" class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Symbol</label>
+        <div class="dropdown w-100">
+          <input id="backtestSymbol" name="symbol" class="form-control" value="{{ symbol }}" autocomplete="off">
+          <div id="backtest-symbol-dropdown" class="dropdown-menu w-100"></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Resolution</label>
+        <select name="resolution" class="form-select">
+          {% for code, label in resolutions %}
+            <option value="{{ code }}" {% if code == default_resolution %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Start Date</label>
+        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">End Date</label>
+        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+      </div>
+      <div class="col-12">
+        <button class="btn btn-primary">Run Backtest</button>
+      </div>
+    </form>
+
+    {% if performance %}
+    <h2 class="mt-5">Performance</h2>
+    <table class="table table-striped">
+      <tr><th>Total Return</th><td>{{ '{:.2%}'.format(performance['total_return']) }}</td></tr>
+      <tr><th>Annual Return</th><td>{{ '{:.2%}'.format(performance['annual_return']) }}</td></tr>
+      <tr><th>Volatility</th><td>{{ '{:.2%}'.format(performance['volatility']) }}</td></tr>
+      <tr><th>Sharpe Ratio</th><td>{{ '{:.3f}'.format(performance['sharpe_ratio']) }}</td></tr>
+      <tr><th>Max Drawdown</th><td>{{ '{:.2%}'.format(performance['max_drawdown']) }}</td></tr>
+      <tr><th>Win Rate</th><td>{{ '{:.2%}'.format(performance['win_rate']) }}</td></tr>
+      <tr><th>Profit Factor</th><td>{{ '{:.2f}'.format(performance['profit_factor']) }}</td></tr>
+      <tr><th>Total Trades</th><td>{{ performance['total_trades'] }}</td></tr>
+    </table>
+    {% endif %}
+  </div>
+
+  <script>
+  const input = document.getElementById('backtestSymbol');
+  const dropdown = document.getElementById('backtest-symbol-dropdown');
+  input.addEventListener('input', async () => {
+    const q = input.value;
+    if (q.length < 2) {
+      dropdown.classList.remove('show');
+      return;
+    }
+    const res = await fetch(`/search-symbol?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    dropdown.innerHTML = '';
+    data.forEach(item => {
+      const a = document.createElement('a');
+      a.classList.add('dropdown-item');
+      a.textContent = `${item.symbol} - ${item.name}`;
+      a.addEventListener('click', () => {
+        input.value = item.symbol;
+        dropdown.classList.remove('show');
+      });
+      dropdown.appendChild(a);
+    });
+    if (data.length) {
+      dropdown.classList.add('show');
+    } else {
+      dropdown.classList.remove('show');
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && e.target !== input) {
+      dropdown.classList.remove('show');
+    }
+  });
+  </script>
+</body>
+</html>
