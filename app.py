@@ -1,6 +1,6 @@
-from flask import Flask, render_template, request, flash, redirect, url_for
+from flask import Flask, render_template, request, flash, redirect, url_for, jsonify
 import pandas as pd
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import os
 from config import (
     SYMBOL, RESOLUTIONS, DEFAULT_RESOLUTION, NUM_CANDLES, FLASK_SECRET_KEY,
@@ -10,6 +10,8 @@ from fyers_api import initialize_fyers, get_historical_data, get_historical_rang
 from indicators.composite import calculate_composite_indicators
 from strategy.signals import WeightedSignalGenerator
 from strategy.weights import WeightManager
+from strategy.backtesting import StrategyBacktester
+from symbol_search import search_symbols, to_fyers_symbol
 from plotter import save_chart
 
 app = Flask(__name__)
@@ -19,6 +21,7 @@ app.secret_key = FLASK_SECRET_KEY
 fyers = initialize_fyers()
 weight_manager = WeightManager()
 signal_generator = WeightedSignalGenerator(weight_manager)
+backtester = StrategyBacktester()
 
 # Ensure static images folder exists
 IMG_FOLDER = os.path.join(app.static_folder, 'charts')
@@ -202,6 +205,76 @@ def weights_management():
                            symbol=symbol,
                            weights=current_weights,
                            available_symbols=['default', 'NSE:RELIANCE-EQ', 'NSE:TCS-EQ'])
+
+
+@app.route('/search-symbol')
+def search_symbol_endpoint():
+    """Provide symbol suggestions based on FinanceDatabase."""
+    query = request.args.get('q', '')
+    results = []
+    if query:
+        df = search_symbols(query)
+        for sym, row in df.iterrows():
+            results.append({'symbol': to_fyers_symbol(sym), 'name': row.get('name', '')})
+    return jsonify(results)
+
+
+@app.route('/backtest', methods=['GET', 'POST'])
+def backtest_view():
+    """Run a strategy backtest over a date range."""
+    if request.method == 'POST':
+        symbol = request.form.get('symbol') or SYMBOL
+        resolution = request.form.get('resolution') or DEFAULT_RESOLUTION
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+
+        if not start_date or not end_date:
+            flash('Please select start and end dates.')
+            return redirect(url_for('backtest_view'))
+
+        start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+
+        df = get_historical_range(fyers, symbol, resolution, start_dt, end_dt)
+        if df.empty:
+            flash(f'No data for {symbol} in selected range.')
+            return redirect(url_for('backtest_view'))
+
+        df_ind = calculate_composite_indicators(
+            df,
+            basic_config=BASIC_INDICATORS_CONFIG,
+            advanced_config=ADVANCED_INDICATORS_CONFIG
+        )
+
+        signals = []
+        prices = df_ind['close'].tolist()
+        for i in range(len(df_ind)):
+            sig, _ = signal_generator.evaluate_conditions(df_ind.iloc[:i+1], symbol)
+            if sig is True:
+                signals.append('BUY')
+            elif sig is False:
+                signals.append('SELL')
+            else:
+                signals.append('NEUTRAL')
+
+        result = backtester.backtest_strategy(df_ind, signals, prices)
+
+        return render_template(
+            'backtest.html',
+            symbol=symbol,
+            resolution=resolution,
+            start_date=start_date,
+            end_date=end_date,
+            performance=result.get('performance'),
+            resolutions=RESOLUTIONS,
+            default_resolution=DEFAULT_RESOLUTION
+        )
+
+    # GET request - show backtest form
+    return render_template('backtest.html',
+                           symbol=SYMBOL,
+                           resolutions=RESOLUTIONS,
+                           default_resolution=DEFAULT_RESOLUTION)
 
 
 if __name__ == '__main__':

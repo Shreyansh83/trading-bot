@@ -33,8 +33,9 @@
                 <div class="col-md-6">
                   <div class="mb-3">
                     <label class="form-label">Symbol</label>
-                    <input name="symbol" class="form-control" value="{{ default_symbol }}" 
+                    <input id="symbolInput" name="symbol" class="form-control" value="{{ default_symbol }}" list="symbol-suggestions"
                            placeholder="e.g., NSE:RELIANCE-EQ">
+                    <datalist id="symbol-suggestions"></datalist>
                     <small class="form-text text-muted">Enter the symbol you want to analyze</small>
                   </div>
                 </div>
@@ -163,7 +164,24 @@
       form.action = '/';
       form.method = 'post';
       historicOptions.style.display = 'block';
+  });
+
+  // Symbol search suggestions
+  const symbolInput = document.getElementById('symbolInput');
+  const suggestions = document.getElementById('symbol-suggestions');
+  symbolInput.addEventListener('input', async () => {
+    const q = symbolInput.value;
+    if (q.length < 2) return;
+    const res = await fetch(`/search-symbol?q=${q}`);
+    const data = await res.json();
+    suggestions.innerHTML = '';
+    data.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item.symbol;
+      opt.text = `${item.symbol} - ${item.name}`;
+      suggestions.appendChild(opt);
     });
+  });
 
     liveOpt.addEventListener('change', () => {
       form.action = '/live';
