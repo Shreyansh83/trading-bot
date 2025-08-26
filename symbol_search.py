@@ -21,6 +21,8 @@ def search_symbols(query: str, limit: int = 10) -> pd.DataFrame:
     if not query:
         return pd.DataFrame()
     df = _load_equities()
+    # Only keep symbols listed on NSE or BSE to ensure Fyers compatibility
+    df = df[df.index.str.endswith((".NS", ".BO"))]
     mask = df.index.str.contains(query, case=False) | df["name"].str.contains(query, case=False)
     return df[mask].head(limit)
 

@@ -33,9 +33,10 @@
                 <div class="col-md-6">
                   <div class="mb-3">
                     <label class="form-label">Symbol</label>
-                    <input id="symbolInput" name="symbol" class="form-control" value="{{ default_symbol }}" list="symbol-suggestions"
-                           placeholder="e.g., NSE:RELIANCE-EQ">
-                    <datalist id="symbol-suggestions"></datalist>
+                    <div class="dropdown w-100">
+                      <input id="symbolInput" name="symbol" class="form-control" value="{{ default_symbol }}" autocomplete="off" placeholder="e.g., NSE:RELIANCE-EQ">
+                      <div id="symbol-dropdown" class="dropdown-menu w-100"></div>
+                    </div>
                     <small class="form-text text-muted">Enter the symbol you want to analyze</small>
                   </div>
                 </div>
@@ -166,21 +167,39 @@
       historicOptions.style.display = 'block';
   });
 
-  // Symbol search suggestions
+  // Symbol search suggestions dropdown
   const symbolInput = document.getElementById('symbolInput');
-  const suggestions = document.getElementById('symbol-suggestions');
+  const dropdown = document.getElementById('symbol-dropdown');
   symbolInput.addEventListener('input', async () => {
     const q = symbolInput.value;
-    if (q.length < 2) return;
-    const res = await fetch(`/search-symbol?q=${q}`);
+    if (q.length < 2) {
+      dropdown.classList.remove('show');
+      return;
+    }
+    const res = await fetch(`/search-symbol?q=${encodeURIComponent(q)}`);
     const data = await res.json();
-    suggestions.innerHTML = '';
+    dropdown.innerHTML = '';
     data.forEach(item => {
-      const opt = document.createElement('option');
-      opt.value = item.symbol;
-      opt.text = `${item.symbol} - ${item.name}`;
-      suggestions.appendChild(opt);
+      const a = document.createElement('a');
+      a.classList.add('dropdown-item');
+      a.textContent = `${item.symbol} - ${item.name}`;
+      a.addEventListener('click', () => {
+        symbolInput.value = item.symbol;
+        dropdown.classList.remove('show');
+      });
+      dropdown.appendChild(a);
     });
+    if (data.length) {
+      dropdown.classList.add('show');
+    } else {
+      dropdown.classList.remove('show');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && e.target !== symbolInput) {
+      dropdown.classList.remove('show');
+    }
   });
 
     liveOpt.addEventListener('change', () => {

@@ -10,8 +10,10 @@
     <form method="post" class="row g-3">
       <div class="col-md-3">
         <label class="form-label">Symbol</label>
-        <input name="symbol" class="form-control" value="{{ symbol }}" list="symbol-suggestions">
-        <datalist id="symbol-suggestions"></datalist>
+        <div class="dropdown w-100">
+          <input id="backtestSymbol" name="symbol" class="form-control" value="{{ symbol }}" autocomplete="off">
+          <div id="backtest-symbol-dropdown" class="dropdown-menu w-100"></div>
+        </div>
       </div>
       <div class="col-md-3">
         <label class="form-label">Resolution</label>
@@ -50,20 +52,37 @@
   </div>
 
   <script>
-  const input = document.querySelector('input[name="symbol"]');
+  const input = document.getElementById('backtestSymbol');
+  const dropdown = document.getElementById('backtest-symbol-dropdown');
   input.addEventListener('input', async () => {
     const q = input.value;
-    if (q.length < 2) return;
-    const res = await fetch(`/search-symbol?q=${q}`);
+    if (q.length < 2) {
+      dropdown.classList.remove('show');
+      return;
+    }
+    const res = await fetch(`/search-symbol?q=${encodeURIComponent(q)}`);
     const data = await res.json();
-    const dl = document.getElementById('symbol-suggestions');
-    dl.innerHTML = '';
+    dropdown.innerHTML = '';
     data.forEach(item => {
-      const opt = document.createElement('option');
-      opt.value = item.symbol;
-      opt.text = `${item.symbol} - ${item.name}`;
-      dl.appendChild(opt);
+      const a = document.createElement('a');
+      a.classList.add('dropdown-item');
+      a.textContent = `${item.symbol} - ${item.name}`;
+      a.addEventListener('click', () => {
+        input.value = item.symbol;
+        dropdown.classList.remove('show');
+      });
+      dropdown.appendChild(a);
     });
+    if (data.length) {
+      dropdown.classList.add('show');
+    } else {
+      dropdown.classList.remove('show');
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && e.target !== input) {
+      dropdown.classList.remove('show');
+    }
   });
   </script>
 </body>

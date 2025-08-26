@@ -47,7 +47,11 @@ def index():
         market_close = datetime.combine(day, time(15, 30))
 
         # Fetch historical data
-        df = get_historical_range(fyers, symbol, resolution, market_open, market_close)
+        try:
+            df = get_historical_range(fyers, symbol, resolution, market_open, market_close)
+        except RuntimeError as e:
+            flash(str(e))
+            return redirect(url_for('index'))
         if df.empty:
             flash(f'No data for {symbol} on {date_str} at {resolution} resolution.')
             return redirect(url_for('index'))
@@ -117,7 +121,11 @@ def live_view():
     show_chart = request.args.get('show_chart') == 'on'
 
     # Fetch recent data
-    df = get_historical_data(fyers, symbol, resolution, NUM_CANDLES)
+    try:
+        df = get_historical_data(fyers, symbol, resolution, NUM_CANDLES)
+    except RuntimeError as e:
+        flash(str(e))
+        return redirect(url_for('index'))
     if df.empty:
         flash(f'No live data for {symbol} at {resolution} resolution.')
         return redirect(url_for('index'))
@@ -235,7 +243,11 @@ def backtest_view():
         start_dt = datetime.strptime(start_date, '%Y-%m-%d')
         end_dt = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
 
-        df = get_historical_range(fyers, symbol, resolution, start_dt, end_dt)
+        try:
+            df = get_historical_range(fyers, symbol, resolution, start_dt, end_dt)
+        except RuntimeError as e:
+            flash(str(e))
+            return redirect(url_for('backtest_view'))
         if df.empty:
             flash(f'No data for {symbol} in selected range.')
             return redirect(url_for('backtest_view'))
