@@ -51,5 +51,5 @@ static/charts/
 fyersRequests.log
 fyersDataSocket.log
 fyersApi.log
-E2E Live testing-Copy1.ipynb
+*.ipynb
 jupyter_notebook/
