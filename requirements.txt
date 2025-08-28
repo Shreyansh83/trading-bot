@@ -9,3 +9,4 @@ matplotlib
 seaborn  # For enhanced plotting (optional)
 scikit-learn  # Preparing for Phase 2 ML integration
 jupyter  # For analysis notebooks
+financedatabase
