@@ -218,12 +218,14 @@ def weights_management():
 @app.route('/search-symbol')
 def search_symbol_endpoint():
     """Provide symbol suggestions based on FinanceDatabase."""
-    query = request.args.get('q', '')
+    query = request.args.get('q', '').strip()
     results = []
     if query:
         df = search_symbols(query)
-        for sym, row in df.iterrows():
-            results.append({'symbol': to_fyers_symbol(sym), 'name': row.get('name', '')})
+        results = [
+            {'symbol': to_fyers_symbol(sym), 'name': row.get('name', '')}
+            for sym, row in df.iterrows()
+        ]
     return jsonify(results)
 
 
