@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Orders</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Orders</h1>
+        <h2>Place Order</h2>
+        <form action="{{ url_for('orders.place_order_route') }}" method="post">
+            <div class="form-group">
+                <label>Symbol</label>
+                <input type="text" name="symbol" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Side</label>
+                <select name="side" class="form-control">
+                    <option value="BUY">Buy</option>
+                    <option value="SELL">Sell</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" name="quantity" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Place Order</button>
+        </form>
+        <hr>
+        <h2>Existing Orders</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Symbol</th>
+                    <th>Side</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.symbol }}</td>
+                    <td>{{ order.side }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>{{ order.status }}</td>
+                    <td>
+                        <form action="{{ url_for('orders.cancel_order_route', order_id=order.id) }}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

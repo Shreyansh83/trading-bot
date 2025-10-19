@@ -13,9 +13,11 @@ from strategy.weights import WeightManager
 from strategy.backtesting import StrategyBacktester
 from symbol_search import search_symbols, to_fyers_symbol
 from plotter import save_chart
+from order_management.routes import order_blueprint
 
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
+app.register_blueprint(order_blueprint)
 
 # Initialize Fyers and Strategy components
 fyers = initialize_fyers()
